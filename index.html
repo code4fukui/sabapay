@@ -1,26 +1,48 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>さばチケ</title>
+<title>さばペイ</title>
 </head><body>
-<h1>さばチケ</h1>
+<h1>さばペイ</h1>
 
 <table>
+<tr><th>会員ID</th><td><span id=divid></span></td></tr>
 <tr><th>タイトル</th><td><span id=divtitle></span></td></tr>
-<tr><th>ポイント</th><td><span id=divpoint></span>Pt</td></tr>
-<tr><th>発行日時</th><td><span id=divissue></span></td></tr>
+<!--<tr><th>ポイント</th><td><span id=divpoint></span>Pt</td></tr>
 <tr><th>有効期限</th><td><span id=divlimit></span></td></tr>
+<tr><th>発行日時</th><td><span id=divissue></span></td></tr>-->
 </table>
 <div id=divqr></div>
-<button id=btnuse style="display:none">使う</button>
+<div id=divadmin style="display:none">
+<table>
+<tr><th>ポイント残高</th><td><span id=divremain></span>Pt</td></tr></tr>
+<tr><th>有効期限</th><td><span id=divlimit></span></td></tr></tr>
+<tr><th>発行日時</th><td><span id=divissue></span></td></tr></tr>
+<tr><th>使用ポイント</th><td><input id=inuse></td></tr></tr>
+<tr><th>追加ポイント</th><td><select id=seladd>
+  <option value=0>-</option>
+  <option value=1000> 1,000Pt</option>
+  <option value=2000> 2,000Pt</option>
+  <option value=3000> 3,000Pt</option>
+  <option value=5000> 5,000Pt</option>
+  <option value=10000>10,000Pt</option>
+</select></td></tr></tr>
+<tr><th>有効期限</th><td><input id=invalid type=date></td></tr></tr>
+<tr><th></th><td><button id=btnuse>反映する</button></td></tr></tr>
+</table>
+<br>
+→ <a href=admin.html>さばペイ管理画面</a><br>
+</div>
 
 <script type="module">
 import { QRCode } from "https://js.sabae.cc/QRCode.js";
 import { TAI64N } from "https://code4fukui.github.io/TAI64N-es/TAI64N.js";
-import { DateTime } from "https://js.sabae.cc/DateTime.js";
+import { Day, DateTime } from "https://js.sabae.cc/DateTime.js";
 import { CBOR } from "https://js.sabae.cc/CBOR.js";
 import { Base64URL } from "https://code4fukui.github.io/Base64URL/Base64URL.js";
 
-import { indexStorage, keyprikey, db } from "./db.js";
+import { indexStorage, db, dbtr } from "./db.js";
 import * as sec from "https://code4fukui.github.io/sec.js/sec.js";
+
+invalid.value = new Day().dayAfter(365);
 
 const tai64n2string = (tai64n) => {
   const d = TAI64N.toDate(tai64n);
@@ -33,65 +55,107 @@ const [cbor, sig] = CBOR.decode(Base64URL.decode(q));
 const data = CBOR.decode(cbor);
 
 //const data = { id, title, point, issue, valid };
+divid.textContent = data.id;
 divtitle.textContent = data.title;
-divpoint.textContent = data.point;
-divissue.textContent = tai64n2string(data.issue);
-divlimit.textContent = tai64n2string(data.valid);
 divqr.appendChild(new QRCode(location.href));
 
-const sprikey = await indexStorage.getItem(keyprikey);
+const sprikey = await indexStorage.getItem("prikey");
 if (sprikey) {
-  btnuse.style.display = "inline";
-  try {
-    const prikey = Base64URL.decode(sprikey);
-    const pubkey = sec.pubkey(prikey);
-    const verify = sec.verify(sig, pubkey, cbor);
-    if (verify) {
-      const valid = new DateTime(divlimit.textContent).getTime() >= new DateTime().getTime();
-      if (valid) {
-        const dbd = await db.getAt(data.id);
-        if (dbd) {
-          console.log(dbd);
-          if (dbd.use) {
-            btnuse.disabled = true;
-            btnuse.textContent = "使用済み";
-            btnuse.onclick = null;
-          } else {
-            btnuse.textContent = "使う";
-            btnuse.disabled = false;
-            btnuse.onclick = async () => {
-              btnuse.disabled = true;
-              dbd.use = TAI64N.now();
-              await db.setAt(dbd.id, dbd);
-              btnuse.textContent = "使用済み";
-              btnuse.onclick = null;
-            };
-          }
-        } else {
-          // 発行履歴なし
-          btnuse.textContent = "使う（履歴なし）";
-          btnuse.disabled = false;
-          btnuse.onclick = async () => {
-            btnuse.disabled = true;
-            data.use = TAI64N.now();
-            await db.add(data);
-            btnuse.textContent = "使用済み";
-            btnuse.onclick = null;
-          };
-        }
-      } else {
-        btnuse.disabled = true;
-        btnuse.textContent = "期限切れ";
-        btnuse.onclick = null;
-      }
-    } else {
+  divadmin.style.display = "inline";
+  const prikey = Base64URL.decode(sprikey);
+  const pubkey = sec.pubkey(prikey);
+  const verify = sec.verify(sig, pubkey, cbor);
+  if (!verify) {
+    btnuse.disabled = true;
+    btnuse.textContent = "不正なQRです";
+    btnuse.onclick = null;
+  } else {
+    const dbd = await db.getAt(data.id);
+    if (!dbd) {
+      // 発行履歴なし
+      btnuse.textContent = "未登録です";
       btnuse.disabled = true;
-      btnuse.textContent = "不正";
-      btnuse.onclick = null;
+    } else {
+      console.log(dbd);
+      divremain.textContent = dbd.point;
+      divlimit.textContent = tai64n2string(dbd.valid);
+      divissue.textContent = tai64n2string(dbd.issue);
+
+      const valid = new DateTime(divlimit.textContent).getTime() >= new DateTime().getTime();
+
+      btnuse.disabled = false;
+      btnuse.onclick = async () => {
+        btnuse.disabled = true;
+
+        const ptadd = seladd.value;
+        const ptuse = parseInt(inuse.value);
+        if ((isNaN(ptuse) || ptuse <= 0) && ptadd == 0) {
+          alert("使用ポイントが変！");
+          btnuse.disabled = false;
+          return;
+        }
+        if (ptuse > dbd.point) {
+          alert("使用ポイントが残高超えてる！");
+          btnuse.disabled = false;
+          return;
+        }
+        let newpt = parseInt(dbd.point);
+        if (!isNaN(ptuse)) {
+          newpt = dbd.point - ptuse;
+        }
+
+        let newpt2 = newpt;
+        if (ptadd > 0) {
+          if (newpt != 0) {
+            alert("まだポイントが残っています！");
+            btnuse.disabled = false;
+            return;
+          }
+          newpt2 += parseInt(ptadd);
+        }
+
+        const dt = TAI64N.now();
+        if (!isNaN(ptuse)) {
+          const tr = {
+            issue: dt,
+            title: data.title,
+            memberid: data.id,
+            point: newpt,
+            dpoint: -ptuse,
+          };
+          await dbtr.add(tr);
+        }
+        if (ptadd > 0) {
+          const d = new Day(invalid.value).dayAfter(1);
+          const datetime = new DateTime(d);
+          const valid = TAI64N.encode(new Date(datetime.getTime()));
+
+          const tr = {
+            issue: dt,
+            title: data.title,
+            memberid: data.id,
+            point: newpt2,
+            dpoint: ptadd,
+            valid,
+          };
+          await dbtr.add(tr);
+          dbd.valid = valid;
+          dbd.issue = dt;
+        }
+
+        dbd.point = newpt2;
+
+        await db.setAt(dbd.id, dbd);
+
+        alert("反映完了！");
+        divremain.textContent = dbd.point;
+        divlimit.textContent = tai64n2string(dbd.valid);
+        divissue.textContent = tai64n2string(dbd.issue);
+        inuse.value = "";
+        seladd.value = 0;
+        btnuse.disabled = false;
+      };
     }
-  } catch (e) {
-    console.log(e);
-    btnuse.style.display = "none";
   }
 }
 
@@ -100,7 +164,7 @@ if (sprikey) {
 
 
 <hr>
-<a href=https://github.com/code4fukui/sabaregi>src on GitHub</a><br>
+<a href=https://github.com/code4fukui/sabapay>src on GitHub</a><br>
 
 <style>
 body {
@@ -120,10 +184,10 @@ td, th {
   padding: .2em .8em;
   font-size: 16px;
 }
-input {
+input, select {
   padding: .2em;
   margin: .1em;
-  font-size: 16px;
+  font-size: 14px;
 }
 button {
   font-size: 16px;

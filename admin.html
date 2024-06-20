@@ -1,11 +1,11 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>さばチケ 管理画面</title>
+<title>さばペイ 管理画面</title>
 </head><body>
-<h1>さばチケ 管理画面</h1>
+<h1>さばペイ 管理画面</h1>
 
-<h2>発行</h2>
-タイトル: <input id=intitle value="さばチケ"><br>
-ポイント: <input id=inpoint value=100>Pt<br>
+<h2>新規発行</h2>
+タイトル: <input id=intitle value="さばペイ"><br>
+ポイント: <input id=inpoint value=1000>Pt<br>
 有効期限: <input id=invalid type=date><br>
 <button id=btn>発行</button><br>
 <a href=https://code4fukui.github.io/qrlink-reader/>QRコード読み取り</a><br>
@@ -16,11 +16,15 @@
 <div id=divlist></div>
 
 <hr>
+<h2>トランザクション</h2><br>
+<div id=divlist2></div>
+
+<hr>
 <h2>管理</h2>
 <button id=btnprikey>秘密鍵バックアップ</button><br>
 <button id=btnprikey_recover>秘密鍵復元</button><br>
 <button id=btnprikey_clear>秘密鍵再生成</button><br>
-<button id=btndata_clear>発行履歴クリア</button><br>
+<button id=btndata_clear>発行履歴・トランザクションクリア</button><br>
 
 <script type="module">
 import * as sec from "https://code4fukui.github.io/sec.js/sec.js";
@@ -30,16 +34,16 @@ import { TAI64N } from "https://code4fukui.github.io/TAI64N-es/TAI64N.js";
 import { Day, DateTime } from "https://js.sabae.cc/DateTime.js";
 import { CBOR } from "https://js.sabae.cc/CBOR.js";
 import { json2table } from "./json2table.js";
-import { indexStorage, keyprikey, db } from "./db.js";
+import { indexStorage, db, dbtr } from "./db.js";
 
-let prikey = Base64URL.decode(await indexStorage.getItem(keyprikey) || Base64URL.encode(sec.prikey()));
-await indexStorage.setItem(keyprikey, Base64URL.encode(prikey));
+let prikey = Base64URL.decode(await indexStorage.getItem("prikey") || Base64URL.encode(sec.prikey()));
+await indexStorage.setItem("prikey", Base64URL.encode(prikey));
 console.log(prikey);
 let pubkey = sec.pubkey(prikey);
 
-invalid.value = new Day().dayAfter(30);
+invalid.value = new Day().dayAfter(365);
 
-const showItems = async () => {
+const showItems = async (divlist, db) => {
   const items = await db.getAll();
   console.log(items);
   divlist.innerHTML = "";
@@ -58,7 +62,8 @@ const showItems = async () => {
     return false;
   }));
 };
-showItems();
+showItems(divlist, db);
+showItems(divlist2, dbtr);
 
 const makeURL = (qrdata) => {
   const url0 = location.href;
@@ -85,6 +90,15 @@ btn.onclick = async () => {
   const data = { title, point, issue, valid };
 
   data.id = await db.add(data);
+  const tr = {
+    issue,
+    title,
+    memberid: data.id,
+    point,
+    dpoint: point,
+    valid,
+  };
+  await dbtr.add(tr);
 
   const url = makeQRURL(data);
   qr.innerHTML = "";
@@ -93,7 +107,8 @@ btn.onclick = async () => {
   a.appendChild(new QRCode(url));
   qr.appendChild(a);
 
-  await showItems();
+  await showItems(divlist, db);
+  await showItems(divlist2, dbtr);
 };
 
 btnprikey.onclick = () => {
@@ -102,7 +117,7 @@ btnprikey.onclick = () => {
 btnprikey_recover.onclick = async () => {
   const s = prompt("秘密鍵");
   if (s) {
-    await indexStorage.setItem(keyprikey, s);
+    await indexStorage.setItem("prikey", s);
     prikey = Base64URL.decode(s);
     pubkey = sec.pubkey(prikey);
   }
@@ -110,19 +125,22 @@ btnprikey_recover.onclick = async () => {
 btnprikey_clear.onclick = async () => {
   if (confirm("秘密鍵を再生成します")) {
     prikey = sec.prikey();
-    await indexStorage.setItem(keyprikey, Base64URL.encode(prikey));
+    await indexStorage.setItem("prikey", Base64URL.encode(prikey));
     pubkey = sec.pubkey(prikey);
   }
 };
 
 btndata_clear.onclick = async () => {
+  if (!confirm("本当に消しちゃっていいですか？")) return;
   await db.removeAll();
-  await showItems();
+  await dbtr.removeAll();
+  await showItems(divlist, db);
+  await showItems(divlist2, dbtr);
 };
 </script>
 
 <hr>
-<a href=https://github.com/code4fukui/sabaticket>src on GitHub</a><br>
+<a href=https://github.com/code4fukui/sabapay>src on GitHub</a><br>
 
 <style>
 body {
