@@ -1,0 +1,47 @@
+body {
+  font-family: sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+h2 {
+  margin: .3em 0;
+  padding: 0;
+}
+table {
+  display: inline-block;
+  border-collapse: collapse;
+}
+#main {
+  margin: 1em 0;
+  border-collapse: collapse;
+}
+td, th {
+  border: 1px solid black;
+  padding: .2em .8em;
+  font-size: 16px;
+}
+input {
+  padding: .2em;
+  margin: .1em;
+  font-size: 14px;
+}
+select {
+  padding: .2em;
+  margin: .1em;
+  font-size: 22px;
+}
+button {
+  font-size: 16px;
+  padding: .2em;
+}
+input {
+  font-size: 150%;
+}
+a {
+  color: gray !important;
+}
+.min {
+  font-size: 13px;
+}
+#btnclear {
+  margin: .5em;
+}

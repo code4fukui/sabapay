@@ -1,22 +1,29 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
 <title>さばペイ 管理画面</title>
+<link rel="stylesheet" href="style.css">
 </head><body>
 <h1>さばペイ 管理画面</h1>
 
 <h2>新規発行</h2>
 タイトル: <input id=intitle value="さばペイ"><br>
-ポイント: <input id=inpoint value=1000>Pt<br>
+ポイント: <select id=seladd>
+  <option value=1000> 1,000Pt</option>
+  <option value=2000> 2,000Pt</option>
+  <option value=3000> 3,000Pt</option>
+  <option value=5000> 5,000Pt</option>
+  <option value=10000>10,000Pt</option>
+</select><br>
 有効期限: <input id=invalid type=date><br>
 <button id=btn>発行</button><br>
 <a href=https://code4fukui.github.io/qrlink-reader/>QRコード読み取り</a><br>
 <div id=qr></div>
 
 <hr>
-<h2>発行済み</h2><br>
+<h2>発行済み</h2>
 <div id=divlist></div>
 
 <hr>
-<h2>トランザクション</h2><br>
+<h2>トランザクション</h2>
 <div id=divlist2></div>
 
 <hr>
@@ -85,7 +92,7 @@ btn.onclick = async () => {
   const d = new Day(invalid.value).dayAfter(1);
   const dt = new DateTime(d);
   const valid = TAI64N.encode(new Date(dt.getTime()));
-  const point = parseInt(inpoint.value);
+  const point = parseInt(seladd.value);
   const title = intitle.value;
   const data = { title, point, issue, valid };
 
@@ -141,25 +148,4 @@ btndata_clear.onclick = async () => {
 
 <hr>
 <a href=https://github.com/code4fukui/sabapay>src on GitHub</a><br>
-
-<style>
-body {
-  font-family: sans-serif;
-}
-input {
-  padding: .3em;
-  margin: .2em;
-  font-size: 16px;
-}
-a {
-  color: gray !important;
-}
-table {
-  border-collapse: collapse;
-}
-td, th {
-  border: 1px solid black;
-  padding: .1em .4em;
-}
-</style>
 </body><html>
