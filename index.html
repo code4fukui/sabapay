@@ -27,8 +27,8 @@
   <option value=10000>10,000Pt</option>
 </select></td></tr></tr>
 <tr><th>有効期限</th><td><input id=invalid type=date></td></tr></tr>
-<tr><th></th><td><button id=btnuse>反映する</button></td></tr></tr>
 </table>
+<button id=btnuse>反映する</button><br>
 <br>
 → <a href=admin.html>さばペイ管理画面</a><br>
 </div>
@@ -42,13 +42,9 @@ import { Base64URL } from "https://code4fukui.github.io/Base64URL/Base64URL.js";
 
 import { indexStorage, db, dbtr } from "./db.js";
 import * as sec from "https://code4fukui.github.io/sec.js/sec.js";
+import { tai64n2string } from "./tai64n2string.js";
 
 invalid.value = new Day().dayAfter(365);
-
-const tai64n2string = (tai64n) => {
-  const d = TAI64N.toDate(tai64n);
-  return new DateTime(d).toString();
-};
 
 const url = new URL(location.href);
 const q = url.searchParams.get("q");

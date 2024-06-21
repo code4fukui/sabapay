@@ -35,6 +35,7 @@ button {
 }
 input {
   font-size: 150%;
+  width: 5em;
 }
 a {
   color: gray !important;
