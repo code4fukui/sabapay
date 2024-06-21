@@ -2,11 +2,12 @@
 <title>さばペイ</title>
 <link rel="stylesheet" href="style.css">
 </head><body>
-<h1>さばペイ</h1>
+<h1 id=divtitle>さばペイ</h1>
 
 <table>
-<tr><th>会員ID</th><td><span id=divid></span></td></tr>
-<tr><th>タイトル</th><td><span id=divtitle></span></td></tr>
+<!--<tr><th>会員ID</th><td><span id=divid></span></td></tr>-->
+会員ID: <span id=divid></span><br>
+<!--<tr><th>タイトル</th><td><span id=divtitle></span></td></tr>-->
 <!--<tr><th>ポイント</th><td><span id=divpoint></span>Pt</td></tr>
 <tr><th>有効期限</th><td><span id=divlimit></span></td></tr>
 <tr><th>発行日時</th><td><span id=divissue></span></td></tr>-->
@@ -54,6 +55,7 @@ const data = CBOR.decode(cbor);
 //const data = { id, title, point, issue, valid };
 divid.textContent = data.id;
 divtitle.textContent = data.title;
+document.title = data.title;
 divqr.appendChild(new QRCode(location.href));
 
 const sprikey = await indexStorage.getItem("prikey");
