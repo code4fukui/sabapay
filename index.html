@@ -95,7 +95,7 @@ if (sprikey) {
           btnuse.disabled = false;
           return;
         }
-        if (ptuse > dbd.point) {
+        if (ptuse > dbd.point + ptadd) {
           alert("使用ポイントが残高超えてる！");
           btnuse.disabled = false;
           return;
@@ -107,7 +107,7 @@ if (sprikey) {
 
         let newpt2 = newpt;
         if (ptadd > 0) {
-          if (newpt != 0) {
+          if (dbd.point > ptuse) {
             alert("まだポイントが残っています！");
             btnuse.disabled = false;
             return;
