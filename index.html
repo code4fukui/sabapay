@@ -64,10 +64,12 @@ if (sprikey) {
   const prikey = Base64URL.decode(sprikey);
   const pubkey = sec.pubkey(prikey);
   const verify = sec.verify(sig, pubkey, cbor);
-  if (!verify) {
+  if (!verify) { // 自分のペイではない
+    /*
     btnuse.disabled = true;
     btnuse.textContent = "不正なQRです";
     btnuse.onclick = null;
+    */
   } else {
     const dbd = await db.getAt(data.id);
     if (!dbd) {
