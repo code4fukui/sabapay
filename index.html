@@ -88,7 +88,7 @@ if (sprikey) {
       btnuse.onclick = async () => {
         btnuse.disabled = true;
 
-        const ptadd = seladd.value;
+        const ptadd = parseInt(seladd.value);
         const ptuse = parseInt(inuse.value);
         if ((isNaN(ptuse) || ptuse <= 0) && ptadd == 0) {
           alert("使用ポイントが変！");
@@ -112,7 +112,7 @@ if (sprikey) {
             btnuse.disabled = false;
             return;
           }
-          newpt2 += parseInt(ptadd);
+          newpt2 += ptadd;
         }
 
         const dt = TAI64N.now();
