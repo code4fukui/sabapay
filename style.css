@@ -10,6 +10,10 @@ table {
   display: inline-block;
   border-collapse: collapse;
 }
+.tablec {
+  width: 100%;
+  overflow: scroll;
+}
 #main {
   margin: 1em 0;
   border-collapse: collapse;
@@ -22,20 +26,21 @@ td, th {
 input {
   padding: .2em;
   margin: .1em;
-  font-size: 14px;
+  font-size: 18px;
+  width: 8em;
+}
+input[type=date] {
+  font-size: 18px;
+  width: 8em;
 }
 select {
   padding: .2em;
   margin: .1em;
-  font-size: 22px;
+  font-size: 18px;
 }
 button {
-  font-size: 16px;
+  font-size: 18px;
   padding: .2em;
-}
-input {
-  font-size: 150%;
-  width: 5em;
 }
 a {
   color: gray !important;

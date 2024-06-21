@@ -22,11 +22,11 @@
 
 <hr>
 <h2>発行済み</h2>
-<div id=divlist></div>
+<div id=divlist class=tablec></div>
 
 <hr>
 <h2>トランザクション</h2>
-<div id=divlist2></div>
+<div id=divlist2 class=tablec></div>
 
 <hr>
 <h2>管理</h2>
@@ -44,6 +44,7 @@ import { Day, DateTime } from "https://js.sabae.cc/DateTime.js";
 import { CBOR } from "https://js.sabae.cc/CBOR.js";
 import { json2table } from "./json2table.js";
 import { indexStorage, db, dbtr } from "./db.js";
+import { tai64n2string } from "./tai64n2string.js";
 
 let prikey = Base64URL.decode(await indexStorage.getItem("prikey") || Base64URL.encode(sec.prikey()));
 await indexStorage.setItem("prikey", Base64URL.encode(prikey));
@@ -64,8 +65,7 @@ const showItems = async (divlist, db) => {
       a.textContent = value;
       return true;
     } else if (value instanceof Uint8Array && value.length == 12) { // TAI64N
-      const d = TAI64N.toDate(value);
-      td.textContent = new DateTime(d).toString();
+      td.textContent = tai64n2string(value);
       return true;
     }
     return false;
